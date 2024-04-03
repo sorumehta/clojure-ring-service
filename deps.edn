@@ -1,0 +1,46 @@
+{:paths ["src" "resources"]
+ :deps {org.clojure/clojure {:mvn/version "1.11.1"}
+        aero/aero                      {:mvn/version "1.1.6"}
+         ;; Component system and DI
+        integrant/integrant            {:mvn/version "0.8.1"}
+        ;; Routing
+        metosin/reitit {:mvn/version "0.6.0"}
+        ;; Ring
+        metosin/ring-http-response {:mvn/version "0.9.3"}
+        ring/ring-core {:mvn/version "1.12.1"}
+        ring/ring-defaults {:mvn/version "0.4.0"}
+         ;; Helidon Ring adapter
+        com.s-exp/hirundo {:mvn/version "0.1.34"}
+         ;; Data coercion
+        metosin/muuntaja {:mvn/version "0.6.8"}
+        luminus-transit/luminus-transit {:mvn/version "0.1.6"
+                                         :exclusions [com.cognitect/transit-clj]}
+        ;; aws
+        com.cognitect.aws/api       {:mvn/version "0.8.692"}
+        com.cognitect.aws/endpoints {:mvn/version "1.1.12.682"}
+        com.cognitect.aws/cognito-idp
+        {:mvn/version "857.2.1574.0",
+         :aws/serviceFullName "Amazon Cognito Identity Provider"}
+        ;; Logging
+        org.clojure/tools.logging      {:mvn/version "1.2.4"}
+        ch.qos.logback/logback-classic {:mvn/version "1.4.14"}}
+ :aliases {:build {:deps {io.github.clojure/tools.build {:mvn/version "0.9.6"}}
+                   :ns-default build}
+
+
+           :dev  {:extra-deps  {integrant/repl                  {:mvn/version "0.3.3"}}
+                  :extra-paths ["env/dev/clj" "env/dev/resources" "test"]}
+           :nrepl {:extra-deps {nrepl/nrepl {:mvn/version "1.1.0"}}
+                   :main-opts  ["-m" "nrepl.cmdline" "-i"]}
+           :cider {:extra-deps {nrepl/nrepl       {:mvn/version "1.1.0"}
+                                cider/cider-nrepl {:mvn/version "0.45.0"}}
+                   :main-opts  ["-m" "nrepl.cmdline" "--middleware" "[cider.nrepl/cider-middleware]" "-i"]}
+
+           :test {:extra-deps  {integrant/repl                       {:mvn/version "0.3.3"}
+                                io.github.cognitect-labs/test-runner {:git/url "https://github.com/cognitect-labs/test-runner.git"
+                                                                      :git/tag "v0.5.1"
+                                                                      :git/sha "dfb30dd"}}
+                  :exec-fn      cognitect.test-runner.api/test
+                  :extra-paths ["env/dev/clj" "env/dev/resources" "env/test/resources" "test"]
+                  :main-opts   ["-e" "(require 'pjstadig.humane-test-output) (pjstadig.humane-test-output/activate!)"
+                                "-m" "cognitect.test-runner"]}}}
