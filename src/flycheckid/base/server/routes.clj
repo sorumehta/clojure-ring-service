@@ -1,13 +1,16 @@
 (ns flycheckid.base.server.routes
-  (:require  [flycheckid.base.server.controllers.health :as health]
-             [flycheckid.base.server.middleware.exception :as exception]
-             [flycheckid.base.server.middleware.formats :as formats]
-             [integrant.core :as ig]
-             [reitit.coercion.malli :as malli]
-             [reitit.ring.coercion :as coercion]
-             [reitit.ring.middleware.muuntaja :as muuntaja]
-             [reitit.ring.middleware.parameters :as parameters]
-             [reitit.swagger :as swagger]))
+  (:require
+   [integrant.core :as ig]
+   [reitit.coercion.malli :as malli]
+   [reitit.ring.coercion :as coercion]
+   [reitit.ring.middleware.muuntaja :as muuntaja]
+   [reitit.ring.middleware.parameters :as parameters]
+   [reitit.swagger :as swagger]
+   [flycheckid.base.server.controllers.health :as health]
+   [flycheckid.base.server.middleware.exception :as exception]
+   [flycheckid.base.server.middleware.formats :as formats]
+   [flycheckid.component.account.core :as account]
+   [flycheckid.component.account.spec :as account-spec]))
 
 
 (def route-data
@@ -33,13 +36,28 @@
 
 
 ;; Routes
-(defn api-routes [_opts]
+(defn api-routes [opts]
   [["/swagger.json"
     {:get {:no-doc  true
            :swagger {:info {:title "FlycheckID API"}}
            :handler (swagger/create-swagger-handler)}}]
    ["/health"
-    {:get health/healthcheck!}]])
+    {:get health/healthcheck!}]
+   ["/account/sign-up"
+    {:post {:summary "creates a user in aws cognito user pool"
+            :parameters {:body [:map
+                                [:email string?]
+                                [:password string?]]}
+            :responses {200 {:body account-spec/Account}}
+            :handler (partial account/sign-up opts)}}]
+
+   ["/account/confirm"
+    {:post {:summary "creates a user in aws cognito user pool"
+            :parameters {:body [:map
+                                [:email string?]
+                                [:confirmationCode string?]]}
+            :responses {200 {:body nil}}
+            :handler (partial account/confirm opts)}}]])
 
 
 (derive :reitit.routes/api :reitit/routes)

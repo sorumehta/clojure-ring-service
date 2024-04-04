@@ -36,11 +36,18 @@
 
  :reitit.routes/api
  {:base-path "/api"
-  :env #ig/ref :system/env}
+  :env #ig/ref :system/env
+  :cognito-idp #ig/ref :auth/cognito}
 
  :router/routes
  {:routes #ig/refset :reitit/routes}
 
  :router/core
  {:routes #ig/ref :router/routes
-  :env #ig/ref :system/env}}
+  :env #ig/ref :system/env}
+
+ :auth/cognito {:client-id "45n3v093jmci7c270r658hgfi5"
+                :client-secret "hndlh7ut84mkqdcv6kcjbimqe45929fq66rh5t2rjdj4bbmrha6"
+                :user-pool-id "ap-south-1_aanfpLpqB"}}
+
+

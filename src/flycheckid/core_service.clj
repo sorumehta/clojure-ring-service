@@ -3,9 +3,10 @@
             [integrant.core :as ig]
             [flycheckid.config :as config]
             [flycheckid.env :refer [defaults]]
-            [flycheckid.base.server.main]
+            [flycheckid.base.server.core]
             [flycheckid.base.server.handler]
-            [flycheckid.base.server.routes])
+            [flycheckid.base.server.routes]
+            [flycheckid.component.auth.core])
   (:gen-class))
 
 

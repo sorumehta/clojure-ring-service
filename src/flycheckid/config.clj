@@ -27,4 +27,6 @@
 
 (defn system-config
   [options]
-  (read-config system-filename options))
+  (let [config (read-config system-filename options)]
+    (println (str "keys of config: " (keys config)))
+    config))

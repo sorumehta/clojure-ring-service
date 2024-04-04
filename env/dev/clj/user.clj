@@ -1,37 +1,53 @@
 (ns user
-  (:require [cognitect.aws.client.api :as aws])
-  (:import [java.util Base64]
-           [javax.crypto Mac]
-           [javax.crypto.spec SecretKeySpec]))
+  (:require [integrant.core :as ig]
+            [integrant.repl.state :as state]
+            [integrant.repl :refer [go halt reset]]
+            [flycheckid.component.auth.core :refer [calculate-secret-hash]]
+            [flycheckid.config]
+            [flycheckid.core-service]
+            [cognitect.aws.client.api :as aws]))
 
 
-(defn calculate-secret-hash
-  [{:keys [client-id client-secret username]}]
-  (let [hmac-sha256-algo "HmacSHA256"
-        signing-key (SecretKeySpec. (.getBytes client-secret) hmac-sha256-algo)
-        mac (Mac/getInstance hmac-sha256-algo)
-        _ (.init mac signing-key)
-        _ (.update mac (.getBytes username))
-        raw-hmac (.doFinal mac (.getBytes client-id))]
-    (.encodeToString (Base64/getEncoder) raw-hmac)))
 
-(calculate-secret-hash
- {:client-id "client-id"
-  :client-secret "client-secret"
-  :username "username"})
+;; (calculate-secret-hash
+;;  {:client-id "client-id"
+;;   :client-secret "client-secret"
+;;   :username "username"})
 
-(def cognito-idp (aws/client {:api :cognito-idp}))
-(aws/ops cognito-idp)
+;; (def cognito-idp (aws/client {:api :cognito-idp}))
+;; (aws/ops cognito-idp)
 
-(aws/doc cognito-idp :SignUp)
+;; (aws/doc cognito-idp :SignUp)
 
-(aws/validate-requests cognito-idp true)
 
-(aws/invoke cognito-idp
-            {:op :SignUp
-             :request {:ClientId "1011uh8vd4hoaec7dpc5k7l7e7"
-                       :Username "saurabh@flycheckid.com"
-                       :Password "bhsh2B!g"
-                       :SecretHash ""}})
 
 (println "Hello, welcome to the namespace")
+
+(defn dev-prep!
+  []
+  (integrant.repl/set-prep! (fn []
+                              (-> (flycheckid.config/system-config {:profile :dev})
+                                  (ig/prep)))))
+(dev-prep!)
+
+
+(comment
+  (go)
+  (require '[cognitect.aws.client.api :as aws])
+  (keys state/system)
+  (:reitit.routes/api state/system)
+
+
+
+;; {:UserConfirmed false,
+;;  :CodeDeliveryDetails {:Destination "s***@g***", :DeliveryMedium "EMAIL", :AttributeName "email"},
+;;  :UserSub "670cb07f-14c4-4eae-ac9b-19a7a68a7c31"}
+
+  ;; {:__type "UsernameExistsException",
+  ;;  :message "An account with the given email already exists.",
+  ;;  :cognitect.aws.http/status 400,
+  ;;  :cognitect.anomalies/category :cognitect.anomalies/incorrect,
+  ;;  :cognitect.aws.error/code "UsernameExistsException"}
+
+
+  (halt))
