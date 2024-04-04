@@ -1,4 +1,4 @@
-(ns flycheckid.server.middleware.core
+(ns flycheckid.base.server.middleware.core
   (:require
    [flycheckid.env :as env]
    [ring.middleware.defaults :as defaults]

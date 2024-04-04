@@ -1,7 +1,7 @@
-(ns flycheckid.server.routes
-  (:require  [flycheckid.server.controllers.health :as health]
-             [flycheckid.server.middleware.exception :as exception]
-             [flycheckid.server.middleware.formats :as formats]
+(ns flycheckid.base.server.routes
+  (:require  [flycheckid.base.server.controllers.health :as health]
+             [flycheckid.base.server.middleware.exception :as exception]
+             [flycheckid.base.server.middleware.formats :as formats]
              [integrant.core :as ig]
              [reitit.coercion.malli :as malli]
              [reitit.ring.coercion :as coercion]

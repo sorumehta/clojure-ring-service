@@ -1,4 +1,4 @@
-(ns flycheckid.server.main
+(ns flycheckid.base.server.main
   (:require [clojure.pprint :as pprint]
             [clojure.tools.logging :as log]
             [integrant.core :as ig]

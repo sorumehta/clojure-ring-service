@@ -1,5 +1,5 @@
 
-(ns flycheckid.server.middleware.exception
+(ns flycheckid.base.server.middleware.exception
   (:require
    [clojure.tools.logging :as log]
    [reitit.ring.middleware.exception :as exception]))

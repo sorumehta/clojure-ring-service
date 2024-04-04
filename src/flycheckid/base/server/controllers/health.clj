@@ -1,5 +1,5 @@
 
-(ns flycheckid.server.controllers.health
+(ns flycheckid.base.server.controllers.health
   (:require
    [ring.util.http-response :as http-response])
   (:import

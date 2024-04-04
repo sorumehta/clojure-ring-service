@@ -1,6 +1,6 @@
-(ns flycheckid.server.handler
+(ns flycheckid.base.server.handler
   (:require
-   [flycheckid.server.middleware.core :as middleware]
+   [flycheckid.base.server.middleware.core :as middleware]
    [integrant.core :as ig]
    [ring.util.http-response :as http-response]
    [reitit.ring :as ring]
