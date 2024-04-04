@@ -2,7 +2,7 @@
   (:require
    [flycheckid.base.server.middleware.core :as middleware]
    [integrant.core :as ig]
-   [ring.util.http-response :as http-response]
+  ;;  [ring.util.http-response :as http-response]
    [reitit.ring :as ring]
    [reitit.swagger-ui :as swagger-ui]))
 
@@ -21,14 +21,11 @@
                                              :url  (str api-path "/swagger.json")}))
     (ring/create-default-handler
      {:not-found
-      (constantly (-> {:status 404, :body "Page not found"}
-                      (http-response/content-type "text/html")))
+      (constantly (-> {:status 404, :body "Page not found"}))
       :method-not-allowed
-      (constantly (-> {:status 405, :body "Not allowed"}
-                      (http-response/content-type "text/html")))
+      (constantly (-> {:status 405, :body "Not allowed"}))
       :not-acceptable
-      (constantly (-> {:status 406, :body "Not acceptable"}
-                      (http-response/content-type "text/html")))}))
+      (constantly (-> {:status 406, :body "Not acceptable"}))}))
    {:middleware [(middleware/wrap-base opts)]}))
 
 (defmethod ig/init-key :router/routes
