@@ -52,12 +52,19 @@
             :handler (partial account/sign-up opts)}}]
 
    ["/account/confirm"
-    {:post {:summary "creates a user in aws cognito user pool"
+    {:post {:summary "confirms a user in aws cognito user pool"
             :parameters {:body [:map
                                 [:email string?]
                                 [:confirmationCode string?]]}
             :responses {200 {:body nil}}
-            :handler (partial account/confirm opts)}}]])
+            :handler (partial account/confirm opts)}}]
+   ["/account/login"
+    {:post {:summary "logs in a user in aws cognito user pool"
+            :parameters {:body [:map
+                                [:email string?]
+                                [:password string?]]}
+            :responses {200 {:body account-spec/Login}}
+            :handler (partial account/login opts)}}]])
 
 
 (derive :reitit.routes/api :reitit/routes)

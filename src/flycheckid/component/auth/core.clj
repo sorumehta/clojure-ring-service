@@ -28,21 +28,21 @@
                                        :client-secret client-secret
                                        :username email})}}))
 
-(defn confirm-account
-  [{:keys [cognito-client client-id client-secret]} {:keys [email user-pool-id]}]
+(defn login-account
+  [{:keys [cognito-client client-id client-secret user-pool-id]} {:keys [email password]}]
   (aws/invoke cognito-client
-              {:op :ConfirmSignUp
+              {:op :AdminInitiateAuth
                :request {:ClientId client-id
                          :UserPoolId user-pool-id
                          :AuthFlow "ADMIN_USER_PASSWORD_AUTH"
-                         :AuthParameters { "USERNAME" email
-                                          "PASSWORD" "bhsh2B!g"
+                         :AuthParameters {"USERNAME" email
+                                          "PASSWORD" password
                                           "SECRET_HASH" (calculate-secret-hash
                                                          {:client-id client-id
                                                           :client-secret client-secret
                                                           :username email})}}}))
 
-(defn account-login
+(defn confirm-account
   [{:keys [cognito-client client-id client-secret]} {:keys [email confirmation-code]}]
   (aws/invoke cognito-client
               {:op :ConfirmSignUp
