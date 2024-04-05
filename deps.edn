@@ -21,9 +21,16 @@
         com.cognitect.aws/cognito-idp
         {:mvn/version "857.2.1574.0",
          :aws/serviceFullName "Amazon Cognito Identity Provider"}
+
+        ;; jwt auth
+        com.auth0/java-jwt {:mvn/version "4.4.0"}
+        com.auth0/jwks-rsa {:mvn/version "0.22.1"}
+
         ;; Logging
         org.clojure/tools.logging      {:mvn/version "1.2.4"}
-        ch.qos.logback/logback-classic {:mvn/version "1.4.14"}}
+        ch.qos.logback/logback-classic {:mvn/version "1.4.14"}
+        ;; Misc
+        org.clojure/data.json {:mvn/version "2.5.0"}}
  :aliases {:build {:deps {io.github.clojure/tools.build {:mvn/version "0.9.6"}}
                    :ns-default build}
 

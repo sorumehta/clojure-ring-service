@@ -21,7 +21,7 @@
 
 
 
-(println "Hello, welcome to the namespace")
+(println "Hello, welcome to the user namespace")
 
 (defn dev-prep!
   []
@@ -35,7 +35,7 @@
   (go)
   (require '[cognitect.aws.client.api :as aws])
   (keys state/system)
-  (:reitit.routes/api state/system)
+  (:auth/cognito state/system)
 
 
 

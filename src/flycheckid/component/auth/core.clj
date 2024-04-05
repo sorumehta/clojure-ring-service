@@ -3,7 +3,10 @@
             [integrant.core :as ig])
   (:import [java.util Base64]
            [javax.crypto Mac]
-           [javax.crypto.spec SecretKeySpec]))
+           [javax.crypto.spec SecretKeySpec]
+           [com.auth0.jwk UrlJwkProvider]
+           [com.auth0.jwk GuavaCachedJwkProvider]
+           [com.auth0.jwt.interfaces RSAKeyProvider]))
 
 
 (defn calculate-secret-hash
@@ -54,8 +57,21 @@
                                        :client-secret client-secret
                                        :username email})}}))
 
+
+
 ;; Integrant lifecycle functions
 (defmethod ig/init-key :auth/cognito
   [_ opts]
-  (merge opts
-         {:cognito-client (aws/client {:api :cognito-idp})}))
+  (let [key-provider (-> (:jwks opts)
+                         (UrlJwkProvider.)
+                         (GuavaCachedJwkProvider.))]
+
+    (merge opts
+           {:cognito-client (aws/client {:api :cognito-idp})
+            :key-provider (reify RSAKeyProvider
+                            (getPublicKeyById [_ kid]
+                              (.getPublicKey (.get key-provider kid)))
+                            (getPrivateKey [_]
+                              nil)
+                            (getPrivateKeyId [_]
+                              nil))})))
