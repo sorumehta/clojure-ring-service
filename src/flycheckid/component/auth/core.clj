@@ -192,6 +192,13 @@
        (decode-token)
        (verify-payload auth)))
 
+(defn get-cognito-client-secret
+  []
+  (get-in (aws/invoke (aws/client {:api :ssm})
+                      {:op :GetParameter
+                       :request {:Name "cognito-client-secret"}})
+          [:Parameter :Value]))
+
 ;; Integrant lifecycle functions
 (defmethod ig/init-key :auth/cognito
   [_ opts]
@@ -201,6 +208,7 @@
 
     (merge opts
            {:cognito-client (aws/client {:api :cognito-idp})
+            :client-secret (get-cognito-client-secret)
             :key-provider (reify RSAKeyProvider
                             (getPublicKeyById [_ kid]
                               (.getPublicKey (.get key-provider kid)))

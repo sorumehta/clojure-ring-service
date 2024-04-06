@@ -47,7 +47,7 @@
   :env #ig/ref :system/env}
 
  :auth/cognito {:client-id "45n3v093jmci7c270r658hgfi5"
-                :client-secret "hndlh7ut84mkqdcv6kcjbimqe45929fq66rh5t2rjdj4bbmrha6"
+                :client-secret "CLIENT_SECRET"
                 :user-pool-id "ap-south-1_aanfpLpqB"
                 :jwks "https://cognito-idp.ap-south-1.amazonaws.com/ap-south-1_aanfpLpqB"}}
 

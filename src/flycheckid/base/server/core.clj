@@ -32,26 +32,10 @@
 
 (defmethod ig/init-key :server/http
   [_ opts]
-  ;; I don't know the reason behind using delay here. Too bad!
-  (let [handler (atom (delay (:http-handler opts)))]
+  (let [handler (:http-handler opts)]
     {:http-handler handler
-     :server  (start (fn [req] (@@handler req)) (dissoc opts :http-handler))}))
+     :server  (start (fn [req] (handler req)) (dissoc opts :http-handler))}))
 
 (defmethod ig/halt-key! :server/http
   [_ {:keys [server]}]
   (stop server))
-
-(defmethod ig/suspend-key! :server/http
-  [_ {:keys [handler]}]
-  (reset! handler (promise)))
-
-
-;; I have no idea what this function is doing, but kit framework does it, so I do it!
-(defmethod ig/resume-key :server/http
-  [k opts old-opts old-impl]
-  (if (= (dissoc opts :http-handler) (dissoc old-opts :http-handler))
-    (do (deliver @(:http-handler old-impl) (:http-handler opts))
-        old-impl)
-    (do (ig/halt-key! k old-impl)
-        (ig/init-key k opts))))
-

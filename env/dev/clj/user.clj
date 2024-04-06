@@ -1,7 +1,7 @@
 (ns user
   (:require [integrant.core :as ig]
             [integrant.repl.state :as state]
-            [integrant.repl :refer [go halt reset]]
+            [integrant.repl :refer [go halt reset reset-all]]
             [flycheckid.component.auth.core :refer [calculate-secret-hash]]
             [flycheckid.config]
             [flycheckid.core-service]
@@ -34,9 +34,17 @@
 (comment
   (+ 1 1 3 4)
   (go)
-  (require '[flycheckid.component.auth.core :refer [verify-payload]])
+  (reset)
   (keys state/system)
   (:auth/cognito state/system)
+
+  (def ssm (aws/client {:api :ssm}))
+  (aws/ops ssm)
+  (aws/doc ssm :GetParameter)
+
+  (aws/validate-requests ssm true)
+
+  (get-in (aws/invoke ssm {:op :GetParameter :request {:Name "cognito-client-secret"}}) [:Parameter :Value])
 
 
 ;; {:UserConfirmed false,
@@ -49,4 +57,4 @@
   ;;  :cognitect.anomalies/category :cognitect.anomalies/incorrect,
   ;;  :cognitect.aws.error/code "UsernameExistsException"}
 
-  `(halt))
+  (halt))

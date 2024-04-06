@@ -22,6 +22,9 @@
         com.cognitect.aws/cognito-idp
         {:mvn/version "857.2.1574.0",
          :aws/serviceFullName "Amazon Cognito Identity Provider"}
+        com.cognitect.aws/ssm
+        {:mvn/version "868.2.1580.0",
+         :aws/serviceFullName "Amazon Simple Systems Manager (SSM)"}
 
         ;; jwt auth
         com.auth0/java-jwt {:mvn/version "4.4.0"}
