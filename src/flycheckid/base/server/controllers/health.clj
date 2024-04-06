@@ -11,4 +11,4 @@
    {:time     (str (Date. (System/currentTimeMillis)))
     :up-since (str (Date. (.getStartTime (java.lang.management.ManagementFactory/getRuntimeMXBean))))
     :app      {:status  "up"
-               :message ""}}))
+               :message "I am healthy, thanks for asking"}}))

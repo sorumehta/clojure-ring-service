@@ -1,6 +1,7 @@
 (ns flycheckid.component.account.core
   (:require [flycheckid.component.auth.core :as auth]
-            [ring.util.http-response :as http-response]))
+            [flycheckid.component.log.interface :as log]
+            [clojure.pprint :as pprint]))
 
 
 
@@ -8,23 +9,41 @@
   [{:keys [cognito-idp]}
    {{{email :email password :password} :body} :parameters}]
   (let [cognito-account (auth/create-cognito-account cognito-idp {:email email :password password})]
-    (if-not (contains? cognito-account :cognitect.anomalies/category)
-      (http-response/ok {:account/account-id (:UserSub cognito-account)
-                         :account/display-name email})
-      (http-response/bad-request {:message (:message cognito-account)}))))
+    {:status 200 :body cognito-account}))
 
 (defn confirm
   [{:keys [cognito-idp]}
    {{{email :email confirmation-code :confirmationCode} :body} :parameters}]
-  (let [cognito-account (auth/confirm-account cognito-idp {:email email :confirmation-code confirmation-code})]
-    (if-not (contains? cognito-account :cognitect.anomalies/category)
-      (http-response/ok nil)
-      (http-response/bad-request {:message (:message cognito-account)}))))
+  (auth/confirm-account cognito-idp {:email email :confirmation-code confirmation-code})
+  {:status 200})
+
+(defn resend-confirmation
+  [{:keys [cognito-idp]}
+   {{{email :email} :body} :parameters}]
+  (auth/resend-confirmation cognito-idp {:email email})
+  {:status 200})
 
 (defn login
   [{:keys [cognito-idp]}
    {{{email :email password :password} :body} :parameters}]
   (let [cognito-login (auth/login-account cognito-idp {:email email :password password})]
-    (if-not (contains? cognito-login :cognitect.anomalies/category)
-      (http-response/ok (:AuthenticationResult cognito-login))
-      (http-response/bad-request {:message (:message cognito-login)}))))
+    {:status 200 :body cognito-login}))
+
+(defn refresh-token
+  [{:keys [cognito-idp]}
+   {{{refresh-token :refreshToken} :body} :parameters claims :claims}]
+  (let [refresh-token-resp (auth/cognito-refresh-token cognito-idp
+                                                       {:refresh-token refresh-token :sub (get-in claims ["sub"])})]
+    {:status 200 :body refresh-token-resp}))
+
+(defn add-to-group
+  [{:keys [cognito-idp]}
+   {{{groupName :groupName} :body} :parameters claims :claims}]
+  (let [update-resp (auth/cognito-add-user-to-group cognito-idp claims groupName)]
+    {:status 200 :body update-resp}))
+
+(defn delete-user
+  [{:keys [cognito-idp]}
+   {claims :claims}]
+  (let [delete-resp (auth/cognito-delete-user cognito-idp claims)]
+    {:status 200 :body delete-resp}))

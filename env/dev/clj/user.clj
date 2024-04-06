@@ -36,10 +36,7 @@
   (go)
   (require '[flycheckid.component.auth.core :refer [verify-payload]])
   (keys state/system)
-  (verify-payload
-   (:auth/cognito state/system)
-   {"event_id" "c2b4baad-d1ae-49ad-8548-ede5d7a3c815", "iat" 1712384694, "auth_time" 1712384694, "sub" "b34c6968-e3e6-43c5-b593-4734423795c8", "origin_jti" "41591802-9dc7-4c1b-bf2d-d62d10e1f452", "username" "b34c6968-e3e6-43c5-b593-4734423795c8", "iss" "https://cognito-idp.ap-south-1.amazonaws.com/ap-south-1_aanfpLpqB", "token_use" "access", "jti" "d47cdd0c-63df-4621-87e8-0bdab9f23760", "exp" 1712388294, "scope" "aws.cognito.signin.user.admin", "client_id" "45n3v093jmci7c270r658hgfi5"})
-
+  (:auth/cognito state/system)
 
 
 ;; {:UserConfirmed false,
@@ -52,5 +49,4 @@
   ;;  :cognitect.anomalies/category :cognitect.anomalies/incorrect,
   ;;  :cognitect.aws.error/code "UsernameExistsException"}
 
-`
-  (halt))
+  `(halt))

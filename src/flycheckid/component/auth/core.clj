@@ -2,15 +2,16 @@
   (:require [clojure.data.json :as json]
             [cognitect.aws.client.api :as aws]
             [integrant.core :as ig]
-            [flycheckid.component.log.interface :as log])
+            [flycheckid.component.log.interface :as log]
+            [clojure.pprint :as pprint])
   (:import [com.auth0.jwk UrlJwkProvider GuavaCachedJwkProvider]
            [com.auth0.jwt JWT]
            [com.auth0.jwt.algorithms Algorithm]
            [com.auth0.jwt.interfaces RSAKeyProvider]
-           [com.auth0.jwt.exceptions JWTDecodeException]
            [java.util Base64]
            [javax.crypto Mac]
-           [javax.crypto.spec SecretKeySpec]))
+           [javax.crypto.spec SecretKeySpec]
+           [com.auth0.jwt.exceptions JWTVerificationException]))
 
 
 (defn calculate-secret-hash
@@ -23,68 +24,149 @@
         raw-hmac (.doFinal mac (.getBytes client-id))]
     (.encodeToString (Base64/getEncoder) raw-hmac)))
 
+
+(defn when-anomaly-throw
+  [result]
+  (when (contains? result :cognitect.anomalies/category)
+    (throw (ex-info (:__type result) {:type :system.exception/unauthorized
+                                      :message (:message result)}))))
+
 (defn create-cognito-account
   [{:keys [cognito-client client-id client-secret]} {:keys [email password]}]
-  (aws/invoke cognito-client
-              {:op :SignUp
-               :request {:ClientId client-id
-                         :Username email
-                         :Password password
-                         :SecretHash (calculate-secret-hash
-                                      {:client-id client-id
-                                       :client-secret client-secret
-                                       :username email})}}))
+  (let [result (aws/invoke cognito-client
+                           {:op :SignUp
+                            :request
+                            {:ClientId client-id
+                             :Username email
+                             :Password password
+                             :SecretHash (calculate-secret-hash
+                                          {:client-id client-id
+                                           :client-secret client-secret
+                                           :username email})}})]
+    (when-anomaly-throw result)
+    {:account/account-id (:UserSub result)
+     :account/display-name email}))
 
 (defn login-account
   [{:keys [cognito-client client-id client-secret user-pool-id]} {:keys [email password]}]
-  (aws/invoke cognito-client
-              {:op :AdminInitiateAuth
-               :request {:ClientId client-id
-                         :UserPoolId user-pool-id
-                         :AuthFlow "ADMIN_USER_PASSWORD_AUTH"
-                         :AuthParameters {"USERNAME" email
-                                          "PASSWORD" password
-                                          "SECRET_HASH" (calculate-secret-hash
-                                                         {:client-id client-id
-                                                          :client-secret client-secret
-                                                          :username email})}}}))
+  (let [result (aws/invoke cognito-client
+                           {:op :AdminInitiateAuth
+                            :request
+                            {:ClientId client-id
+                             :UserPoolId user-pool-id
+                             :AuthFlow "ADMIN_USER_PASSWORD_AUTH"
+                             :AuthParameters {"USERNAME" email
+                                              "PASSWORD" password
+                                              "SECRET_HASH" (calculate-secret-hash
+                                                             {:client-id client-id
+                                                              :client-secret client-secret
+                                                              :username email})}}})]
+    (when-anomaly-throw result)
+    (:AuthenticationResult result)))
+
+
 
 (defn confirm-account
   [{:keys [cognito-client client-id client-secret]} {:keys [email confirmation-code]}]
-  (aws/invoke cognito-client
-              {:op :ConfirmSignUp
-               :request {:ClientId client-id
-                         :Username email
-                         :ConfirmationCode confirmation-code
-                         :SecretHash (calculate-secret-hash
-                                      {:client-id client-id
-                                       :client-secret client-secret
-                                       :username email})}}))
+  (let [result (aws/invoke cognito-client
+                           {:op :ConfirmSignUp
+                            :request {:ClientId client-id
+                                      :Username email
+                                      :ConfirmationCode confirmation-code
+                                      :SecretHash (calculate-secret-hash
+                                                   {:client-id client-id
+                                                    :client-secret client-secret
+                                                    :username email})}})]
+    (when-anomaly-throw result)))
+
+(defn resend-confirmation
+  [{:keys [cognito-client client-id client-secret]} {:keys [email]}]
+  (let [result (aws/invoke cognito-client
+                           {:op :ResendConfirmationCode
+                            :request {:ClientId client-id
+                                      :Username email
+                                      :SecretHash (calculate-secret-hash
+                                                   {:client-id client-id
+                                                    :client-secret client-secret
+                                                    :username email})}})]
+    (when-anomaly-throw result)))
+
+(defn cognito-refresh-token
+  [{:keys [cognito-client client-id client-secret user-pool-id]} {:keys [refresh-token sub]}]
+  (let [result (aws/invoke cognito-client
+                           {:op :AdminInitiateAuth
+                            :request
+                            {:ClientId client-id
+                             :UserPoolId user-pool-id
+                             :AuthFlow "REFRESH_TOKEN_AUTH"
+                             :AuthParameters {"REFRESH_TOKEN" refresh-token
+                                              "SECRET_HASH" (calculate-secret-hash
+                                                             {:client-id client-id
+                                                              :client-secret client-secret
+                                                              :username sub})}}})]
+    (when-anomaly-throw result)
+    (:AuthenticationResult result)))
+
+
+(defn cognito-add-user-to-group
+  [{:keys [cognito-client client-id client-secret user-pool-id]} claims group-name]
+  (let [{:strs [sub]} claims
+        result (aws/invoke cognito-client
+                           {:op :AdminAddUserToGroup
+                            :request
+                            {:ClientId client-id
+                             :UserPoolId user-pool-id
+                             :Username sub
+                             :GroupName group-name
+                             :SecretHash (calculate-secret-hash
+                                          {:client-id client-id
+                                           :client-secret client-secret
+                                           :username sub})}})]
+    (when-anomaly-throw result)
+    (pprint/pprint result)
+    (:AuthenticationResult result)))
+
+
+(defn cognito-delete-user
+  [{:keys [cognito-client user-pool-id]} claims]
+  (let [{:strs [sub]} claims
+        result (aws/invoke cognito-client
+                           {:op :AdminDeleteUser
+                            :request
+                            {:UserPoolId user-pool-id
+                             :Username sub}})]
+    (when-anomaly-throw result)))
+
+
+
 
 (defn split-token
-  "Splits a JWT into its three segments (header, payload, signature) based on '.' delimiters.
-   Throws an exception if the token format is invalid."
   [token]
   (when-not token
-    (throw (JWTDecodeException. "Token cannot be null")))
+    (throw (ex-info "JWTDecodeException" {:type :system.exception/unauthorized
+                                          :message "no token found"})))
 
   (let [parts (.split token "\\.")]  ;; Split on the '.' character (escape the period)
     (if (= (count parts) 3)
       parts
-      (throw (JWTDecodeException. (format "Invalid JWT format: Expected 3 parts, found %s" (count parts)))))))
+      (throw (ex-info "JWTDecodeException" {:type :system.exception/unauthorized
+                                            :message "Invalid token format"})))))
 
 (defn validate-signature
   [{:keys [key-provider]} token]
-  (let [algorithm (Algorithm/RSA256 key-provider)
-        verifier (.build (JWT/require algorithm))]
-    (.verify verifier token))
+  (try
+    (let [algorithm (Algorithm/RSA256 key-provider)
+          verifier (.build (JWT/require algorithm))]
+      (.verify verifier token))
+    (catch JWTVerificationException e
+      (throw (ex-info "JWTVerificationException" {:type :system.exception/unauthorized
+                                                  :message "unauthorized access"}))))
   (let [parts (split-token token)]
     (get parts 1)))
 
 
 (defn decode-to-str
   [s]
-  (log/info (str "token to decode " s))
   (String. (.decode (Base64/getUrlDecoder) s)))
 
 (defn decode-token

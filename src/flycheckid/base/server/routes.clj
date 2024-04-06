@@ -11,9 +11,7 @@
    [flycheckid.base.server.middleware.formats :as formats]
    [flycheckid.component.account.core :as account]
    [flycheckid.component.account.spec :as account-spec]
-   [flycheckid.base.server.middleware.auth :as auth]
-   [ring.util.http-response :as http-response]
-   [clojure.pprint :as pprint]))
+   [flycheckid.base.server.middleware.auth :as auth]))
 
 
 (def route-data
@@ -42,7 +40,23 @@
   [opts]
   ["/private" {:middleware [(auth/wrap-token-authentication opts)]}
    ["/get-user-info" {:post {:handler (fn [request]
-                                        (http-response/ok (:claims request)))}}]])
+                                        {:status 200 :body (:claims request)})}}]
+   ["/account/refresh-token"
+    {:post {:summary "refreshes token a user in aws cognito user pool"
+            :parameters {:body [:map
+                                [:refreshToken string?]]}
+            :responses {200 {:body nil}}
+            :handler (partial account/refresh-token opts)}}]
+   ["/account/update-role"
+    {:put {:summary "adds a user to given group in aws cognito user pool"
+           :parameters {:body [:map
+                               [:groupName string?]]}
+           :responses {200 {:body nil}}
+           :handler (partial account/add-to-group opts)}}]
+   ["/account/delete-user"
+    {:delete {:summary "deletes a user in aws cognito user pool"
+              :responses {200 {:body nil}}
+              :handler (partial account/delete-user opts)}}]])
 
 
 ;; Routes
@@ -69,12 +83,18 @@
                                 [:confirmationCode string?]]}
             :responses {200 {:body nil}}
             :handler (partial account/confirm opts)}}]
+   ["/account/resend-confirmation"
+    {:post {:summary "resend confirmation email for a user in aws cognito user pool"
+            :parameters {:body [:map
+                                [:email string?]]}
+            :responses {200 {:body nil}}
+            :handler (partial account/resend-confirmation opts)}}]
    ["/account/login"
     {:post {:summary "logs in a user in aws cognito user pool"
             :parameters {:body [:map
                                 [:email string?]
                                 [:password string?]]}
-            :responses {200 {:body account-spec/Login}}
+            :responses {200 {:body account-spec/AuthenticationResult}}
             :handler (partial account/login opts)}}]])
 
 

@@ -4,7 +4,7 @@
    [:account/account-id string?]
    [:account/display-name string?]])
 
-(def Login
+(def AuthenticationResult
   [:map
    [:AccessToken string?]
    [:ExpiresIn number?]

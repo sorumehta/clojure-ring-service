@@ -2,7 +2,6 @@
   (:require
    [flycheckid.base.server.middleware.core :as middleware]
    [integrant.core :as ig]
-  ;;  [ring.util.http-response :as http-response]
    [reitit.ring :as ring]
    [reitit.swagger-ui :as swagger-ui]))
 
