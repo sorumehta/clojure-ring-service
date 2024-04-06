@@ -1,17 +1,17 @@
 (ns flycheckid.component.auth.core
   (:require [clojure.data.json :as json]
+            [clojure.pprint :as pprint]
+            [clojure.string :as string]
             [cognitect.aws.client.api :as aws]
-            [integrant.core :as ig]
-            [flycheckid.component.log.interface :as log]
-            [clojure.pprint :as pprint])
-  (:import [com.auth0.jwk UrlJwkProvider GuavaCachedJwkProvider]
+            [integrant.core :as ig])
+  (:import [com.auth0.jwk GuavaCachedJwkProvider UrlJwkProvider]
            [com.auth0.jwt JWT]
            [com.auth0.jwt.algorithms Algorithm]
+           [com.auth0.jwt.exceptions JWTVerificationException]
            [com.auth0.jwt.interfaces RSAKeyProvider]
            [java.util Base64]
            [javax.crypto Mac]
-           [javax.crypto.spec SecretKeySpec]
-           [com.auth0.jwt.exceptions JWTVerificationException]))
+           [javax.crypto.spec SecretKeySpec]))
 
 
 (defn calculate-secret-hash
@@ -30,6 +30,23 @@
   (when (contains? result :cognitect.anomalies/category)
     (throw (ex-info (:__type result) {:type :system.exception/unauthorized
                                       :message (:message result)}))))
+
+(defn get-token
+  [headers]
+  (-> headers
+      (get-in ["authorization"])
+      (string/split #" ")
+      (second)))
+
+(defn get-user-attrs
+  [{:keys [cognito-client]} headers]
+  (let [token (get-token headers)
+        result (aws/invoke cognito-client
+                           {:op :GetUser
+                            :request
+                            {:AccessToken token}})]
+    (when-anomaly-throw result)
+    result))
 
 (defn create-cognito-account
   [{:keys [cognito-client client-id client-secret]} {:keys [email password]}]

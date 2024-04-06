@@ -34,10 +34,10 @@
                                      :content-types true
                                      :default-charset "utf-8"}}}
 
- :reitit.routes/api
- {:base-path "/api"
-  :env #ig/ref :system/env
-  :cognito-idp #ig/ref :auth/cognito}
+ :reitit.routes/api {:base-path "/api"
+                     :env #ig/ref :system/env
+                     :cognito-idp #ig/ref :auth/cognito
+                     :conn  #ig/ref :db.datomic/conn}
 
  :router/routes
  {:routes #ig/refset :reitit/routes}
@@ -49,6 +49,10 @@
  :auth/cognito {:client-id "45n3v093jmci7c270r658hgfi5"
                 :client-secret "CLIENT_SECRET"
                 :user-pool-id "ap-south-1_aanfpLpqB"
-                :jwks "https://cognito-idp.ap-south-1.amazonaws.com/ap-south-1_aanfpLpqB"}}
+                :jwks "https://cognito-idp.ap-south-1.amazonaws.com/ap-south-1_aanfpLpqB"}
+
+ :db.datomic/conn #profile {:dev {:db-uri #or [#env DATOMIC_DB_URI "datomic:dev://localhost:4334/flycheck-db-dev"]}
+                            :test {:db-uri #or [#env DATOMIC_DB_URI "datomic:dev://localhost:4335/flycheck-db-test"]}
+                            :prod {:db-uri #env DATOMIC_DB_URI}}}
 
 

@@ -7,7 +7,8 @@
    [flycheckid.base.server.core]
    [flycheckid.base.server.handler]
    [flycheckid.base.server.routes]
-   [flycheckid.component.auth.core])
+   [flycheckid.component.auth.core]
+   [flycheckid.component.database.core])
   (:gen-class))
 
 

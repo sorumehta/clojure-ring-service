@@ -1,0 +1,15 @@
+[{:db/ident :account/account-id
+  :db/unique :db.unique/identity
+  :db/valueType :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db/doc "The id of the account"}
+
+ {:db/ident :account/display-name
+  :db/valueType :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db/doc "First and Last name of the user/org"}
+
+ {:db/ident :account/email
+  :db/valueType :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db/doc "Email of the user/org"}]

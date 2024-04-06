@@ -11,7 +11,8 @@
    [flycheckid.base.server.middleware.formats :as formats]
    [flycheckid.component.account.core :as account]
    [flycheckid.component.account.spec :as account-spec]
-   [flycheckid.base.server.middleware.auth :as auth]))
+   [flycheckid.base.server.middleware.auth :as auth]
+   [flycheckid.base.server.middleware.db :as db]))
 
 
 (def route-data
@@ -38,9 +39,14 @@
 
 (defn private-routes
   [opts]
-  ["/private" {:middleware [(auth/wrap-token-authentication opts)]}
-   ["/get-user-info" {:post {:handler (fn [request]
-                                        {:status 200 :body (:claims request)})}}]
+  ["/private" {:middleware [(auth/wrap-token-authentication opts) (db/wrap-database opts)]}
+   ["/get-user-info" {:get {:handler (partial account/get-user opts)}}]
+   ["/account/new"
+    {:post {:summary "creates a user with email in db"
+            :parameters {:body [:map
+                                [:name string?]]}
+               ;; :responses {200 {:body account-spec/Account}}
+            :handler (partial account/create-account opts)}}]
    ["/account/refresh-token"
     {:post {:summary "refreshes token a user in aws cognito user pool"
             :parameters {:body [:map
@@ -62,12 +68,14 @@
 ;; Routes
 (defn public-routes
   [opts]
-  [["/swagger.json"
+  ["" {:middleware [(db/wrap-database opts)]}
+   ["/swagger.json"
     {:get {:no-doc  true
            :swagger {:info {:title "FlycheckID API"}}
            :handler (swagger/create-swagger-handler)}}]
    ["/health"
     {:get health/healthcheck!}]
+
    ["/account/sign-up"
     {:post {:summary "creates a user in aws cognito user pool"
             :parameters {:body [:map

@@ -5,6 +5,19 @@
 
 
 
+(defn create-account
+  [{:keys [cognito-idp]}
+   {{{name :name} :body} :parameters db :db headers :headers}]
+  (let [account-details (auth/get-user-attrs cognito-idp headers)])
+  {:status 200 :body nil})
+
+(defn get-user
+  [{:keys [cognito-idp]}
+   {:keys [headers]}]
+  (let [cognito-account (auth/get-user-attrs cognito-idp headers)]
+    {:status 200 :body cognito-account}))
+
+
 (defn sign-up
   [{:keys [cognito-idp]}
    {{{email :email password :password} :body} :parameters}]

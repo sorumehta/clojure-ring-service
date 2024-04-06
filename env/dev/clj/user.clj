@@ -1,23 +1,11 @@
 (ns user
   (:require [integrant.core :as ig]
             [integrant.repl.state :as state]
-            [integrant.repl :refer [go halt reset reset-all]]
-            [flycheckid.component.auth.core :refer [calculate-secret-hash]]
+            [integrant.repl :refer [go halt reset]]
             [flycheckid.config]
             [flycheckid.core-service]
-            [cognitect.aws.client.api :as aws]))
-
-
-
-;; (calculate-secret-hash
-;;  {:client-id "client-id"
-;;   :client-secret "client-secret"
-;;   :username "username"})
-
-;; (def cognito-idp (aws/client {:api :cognito-idp}))
-;; (aws/ops cognito-idp)
-
-;; (aws/doc cognito-idp :SignUp)
+            [cognitect.aws.client.api :as aws]
+            [datomic.api :as d]))
 
 
 
@@ -32,29 +20,57 @@
 
 
 (comment
-  (+ 1 1 3 4)
   (go)
   (reset)
   (keys state/system)
-  (:auth/cognito state/system)
+  (def conn (:db.datomic/conn state/system))
+  @(d/transact conn [{:db/doc "Hello world"}])
 
-  (def ssm (aws/client {:api :ssm}))
-  (aws/ops ssm)
-  (aws/doc ssm :GetParameter)
+  (def movie-schema [{:db/ident :movie/title
+                      :db/valueType :db.type/string
+                      :db/cardinality :db.cardinality/one
+                      :db/doc "The title of the movie"}
 
-  (aws/validate-requests ssm true)
+                     {:db/ident :movie/genre
+                      :db/valueType :db.type/string
+                      :db/cardinality :db.cardinality/one
+                      :db/doc "The genre of the movie"}
 
-  (get-in (aws/invoke ssm {:op :GetParameter :request {:Name "cognito-client-secret"}}) [:Parameter :Value])
+                     {:db/ident :movie/release-year
+                      :db/valueType :db.type/long
+                      :db/cardinality :db.cardinality/one
+                      :db/doc "The year the movie was released in theaters"}])
+
+  @(d/transact conn movie-schema)
+
+  (def first-movies [{:movie/title "The Goonies"
+                      :movie/genre "action/adventure"
+                      :movie/release-year 1985} ;; three attributes, making up an entity
+                     {:movie/title "Commando"
+                      :movie/genre "action/adventure"
+                      :movie/release-year 1985}
+                     {:movie/title "Repo Man"
+                      :movie/genre "punk dystopia"
+                      :movie/release-year 1984}])
+
+  @(d/transact conn first-movies)
 
 
-;; {:UserConfirmed false,
-;;  :CodeDeliveryDetails {:Destination "s***@g***", :DeliveryMedium "EMAIL", :AttributeName "email"},
-;;  :UserSub "670cb07f-14c4-4eae-ac9b-19a7a68a7c31"}
+  (defn get-email-from-user-attributes [user-data]
+    (let [email-attrs (->> user-data
+                           (get "UserAttributes")  ; Use get with string key
+                           (filter #(= (get % "Name") "email")))]
+      (if-not (empty? email-attrs)
+        (-> email-attrs first (get "Value"))  ; Use get with string key
+        "Email not found")))
 
-  ;; {:__type "UsernameExistsException",
-  ;;  :message "An account with the given email already exists.",
-  ;;  :cognitect.aws.http/status 400,
-  ;;  :cognitect.anomalies/category :cognitect.anomalies/incorrect,
-  ;;  :cognitect.aws.error/code "UsernameExistsException"}
 
+  (def attrs {"Username" "670cb07f-14c4-4eae-ac9b-19a7a68a7c31",
+              "UserAttributes" [{"Name" "sub",
+                                 "Value" "670cb07f-14c4-4eae-ac9b-19a7a68a7c31"},
+                                {"Name" "email_verified",
+                                 "Value" "true"},
+                                {"Name" "email",
+                                 "Value" "soru.mehta@gmail.com"}]})
+  (get-email-from-user-attributes attrs)
   (halt))
