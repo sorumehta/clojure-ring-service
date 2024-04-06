@@ -1,5 +1,5 @@
 (ns flycheckid.env
-  (:require [clojure.tools.logging :as log]))
+  (:require [flycheckid.component.log.interface :as log]))
 
 (def defaults
   {:init       (fn []

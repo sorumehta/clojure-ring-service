@@ -4,7 +4,6 @@
   (:require
    [aero.core :as aero]
    [clojure.java.io :as io]
-   [clojure.tools.logging :as log]
    [integrant.core :as ig]))
 
 
@@ -18,7 +17,6 @@
 
 (defn read-config
   [filename options]
-  (log/info "Reading config" filename)
   (aero/read-config (io/resource filename) options))
 
 (defmethod ig/init-key :system/env [_ env] env)
@@ -28,5 +26,4 @@
 (defn system-config
   [options]
   (let [config (read-config system-filename options)]
-    (println (str "keys of config: " (keys config)))
     config))

@@ -1,7 +1,7 @@
 
 (ns flycheckid.base.server.middleware.exception
   (:require
-   [clojure.tools.logging :as log]
+   [flycheckid.component.log.interface :as log]
    [reitit.ring.middleware.exception :as exception]))
 
 (defn handler [message status exception request]

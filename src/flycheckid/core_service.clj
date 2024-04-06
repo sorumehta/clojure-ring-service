@@ -1,12 +1,13 @@
 (ns flycheckid.core-service
-  (:require [clojure.tools.logging :as log]
-            [integrant.core :as ig]
-            [flycheckid.config :as config]
-            [flycheckid.env :refer [defaults]]
-            [flycheckid.base.server.core]
-            [flycheckid.base.server.handler]
-            [flycheckid.base.server.routes]
-            [flycheckid.component.auth.core])
+  (:require
+   [integrant.core :as ig]
+   [flycheckid.component.log.interface :as log]
+   [flycheckid.config :as config]
+   [flycheckid.env :refer [defaults]]
+   [flycheckid.base.server.core]
+   [flycheckid.base.server.handler]
+   [flycheckid.base.server.routes]
+   [flycheckid.component.auth.core])
   (:gen-class))
 
 
@@ -28,6 +29,7 @@
 
 (defn start-app [& [params]]
   ((or (:start params) (:start defaults) (fn [])))
+  (log/init)
   (->> (config/system-config (or (:opts params) (:opts defaults) {}))
        (ig/prep)
        (ig/init)

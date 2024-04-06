@@ -10,7 +10,10 @@
    [flycheckid.base.server.middleware.exception :as exception]
    [flycheckid.base.server.middleware.formats :as formats]
    [flycheckid.component.account.core :as account]
-   [flycheckid.component.account.spec :as account-spec]))
+   [flycheckid.component.account.spec :as account-spec]
+   [flycheckid.base.server.middleware.auth :as auth]
+   [ring.util.http-response :as http-response]
+   [clojure.pprint :as pprint]))
 
 
 (def route-data
@@ -35,8 +38,16 @@
                 exception/wrap-exception]})
 
 
+(defn private-routes
+  [opts]
+  ["/private" {:middleware [(auth/wrap-token-authentication opts)]}
+   ["/get-user-info" {:post {:handler (fn [request]
+                                        (http-response/ok (:claims request)))}}]])
+
+
 ;; Routes
-(defn api-routes [opts]
+(defn public-routes
+  [opts]
   [["/swagger.json"
     {:get {:no-doc  true
            :swagger {:info {:title "FlycheckID API"}}
@@ -65,6 +76,12 @@
                                 [:password string?]]}
             :responses {200 {:body account-spec/Login}}
             :handler (partial account/login opts)}}]])
+
+
+
+(defn api-routes
+  [opts]
+  ["/v1" (public-routes opts) (private-routes opts)])
 
 
 (derive :reitit.routes/api :reitit/routes)

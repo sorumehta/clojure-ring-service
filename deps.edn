@@ -9,8 +9,9 @@
         metosin/ring-http-response {:mvn/version "0.9.3"}
         ring/ring-core {:mvn/version "1.12.1"}
         ring/ring-defaults {:mvn/version "0.4.0"}
-         ;; Helidon Ring adapter
+         ;; Helidon Ring adapter (for production)
         com.s-exp/hirundo {:mvn/version "0.1.34"}
+
          ;; Data coercion
         metosin/muuntaja {:mvn/version "0.6.8"}
         luminus-transit/luminus-transit {:mvn/version "0.1.6"
@@ -27,8 +28,7 @@
         com.auth0/jwks-rsa {:mvn/version "0.22.1"}
 
         ;; Logging
-        org.clojure/tools.logging      {:mvn/version "1.2.4"}
-        ch.qos.logback/logback-classic {:mvn/version "1.4.14"}
+        com.taoensso/timbre {:mvn/version "6.0.4"}
         ;; Misc
         org.clojure/data.json {:mvn/version "2.5.0"}}
  :aliases {:build {:deps {io.github.clojure/tools.build {:mvn/version "0.9.6"}}

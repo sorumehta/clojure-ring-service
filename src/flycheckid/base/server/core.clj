@@ -1,6 +1,6 @@
 (ns flycheckid.base.server.core
   (:require [clojure.pprint :as pprint]
-            [clojure.tools.logging :as log]
+            [flycheckid.component.log.interface :as log]
             [integrant.core :as ig]
             [s-exp.hirundo :as hirundo]))
 
