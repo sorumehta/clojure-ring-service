@@ -5,7 +5,8 @@
             [flycheckid.config]
             [flycheckid.core-service]
             [cognitect.aws.client.api :as aws]
-            [datomic.api :as d]))
+            [datomic.api :as d]
+            [flycheckid.component.database.core :as datomic]))
 
 
 
@@ -24,8 +25,19 @@
   (reset)
   (keys state/system)
   (def conn (:db.datomic/conn state/system))
+  (def db (d/db conn))
+  (def get-account-q '[:find ?account-id ?email ?display-name
+                       :in $ ?account-id
+                       :where [?e :account/account-id ?account-id]
+                       [?e :account/display-name ?display-name]
+                       [?e :account/email ?email]])
+  (require '[flycheckid.component.database.core :as datomic])
+  (d/q get-account-q  db "b34c6968-e3e6-43c5-b593-4734423795c8")
 
-  (def q-result #{["b34c6968-e3e6-43c5-b593-4734423795c8" "soru.mehta@outlook.com" "Saurabh (Outlook)"] ["670cb07f-14c4-4eae-ac9b-19a7a68a7c31" "soru.mehta@gmail.com" "Saurabh Mehta"]})
-  (first q-result)
-  
+  (defn test-args
+    [q d & more]
+    (apply println more))
+
+  (test-args 1 2)
+
   (halt))

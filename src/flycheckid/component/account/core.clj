@@ -9,24 +9,42 @@
 (defn list-accounts
   [_opts
    {db :db}]
+  ;; TODO: Check permission using claims
   (let [all-accounts-q '[:find ?account-id ?email ?display-name
                          :where [?e :account/account-id ?account-id]
                          [?e :account/display-name ?display-name]
                          [?e :account/email ?email]]
         query-result (datomic/query all-accounts-q db)]
-    {:status 200 :body (utils/bind-list-to-map query-result [:account-id :email :display-name])}))
+    {:status 200 :body (utils/bind-list-to-map query-result
+                                               [:account-id :email :display-name])}))
 
 (defn create-account
   [{:keys [cognito-idp conn]}
    {{{name :name} :body} :parameters headers :headers}]
   (let [user-attrs (auth/get-user-attrs cognito-idp headers)]
     (if-let [user-email (auth/get-user-attr-value user-attrs "email")]
-      (do (let [result (datomic/transact-data conn [{:account/account-id (user-attrs :Username)
+      (do (let [result (datomic/transact-data conn [{:account/account-id (:Username user-attrs)
                                                      :account/display-name name
                                                      :account/email user-email}])]
             (log/info result))
           {:status 200 :body {:account-id (:Username user-attrs)}})
       {:status 500 :body {:message "Error while creating user"}})))
+
+
+(defn get-account-by-token
+  [{:keys [cognito-idp]}
+   {headers :headers db :db}]
+  (let [user-attrs (auth/get-user-attrs cognito-idp headers)]
+    (let [get-account-q '[:find ?account-id ?email ?display-name
+                          :in $ ?account-id
+                          :where [?e :account/account-id ?account-id]
+                          [?e :account/display-name ?display-name]
+                          [?e :account/email ?email]]
+          query-result (datomic/query get-account-q db (:Username user-attrs))]
+      (if-not (empty? query-result)
+        {:status 200 :body (first (utils/bind-list-to-map query-result
+                                                          [:account-id :email :display-name]))}
+        {:status 404 :body nil}))))
 
 
 

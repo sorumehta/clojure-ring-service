@@ -49,6 +49,10 @@
    ["/account/list"
     {:get {:summary "gets list of all accounts"
            :handler (partial account/list-accounts opts)}}]
+   ["/account/get"
+    {:get {:summary "get account info from auth token"
+           :handler (partial account/get-account-by-token opts)}}]
+
    ["/account/refresh-token"
     {:post {:summary "refreshes token a user in aws cognito user pool"
             :parameters {:body [:map

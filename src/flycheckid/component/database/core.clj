@@ -25,8 +25,8 @@
   @(d/transact conn tx-data))
 
 (defn query
-  [query db]
-  (d/q query db))
+  [query db & inputs]
+  (apply d/q query db inputs))
 
 ;; Integrant lifecycle functions
 (defmethod ig/init-key :db.datomic/conn
