@@ -17,7 +17,16 @@
       (let [schema-data (-> (io/resource "schema.edn")
                             (slurp)
                             (edn/read-string))]
+        (log/info (str "inserting schema to database (did not exist)"))
         @(d/transact conn schema-data)))))
+
+(defn transact-data
+  [conn tx-data]
+  @(d/transact conn tx-data))
+
+(defn query
+  [query db]
+  (d/q query db))
 
 ;; Integrant lifecycle functions
 (defmethod ig/init-key :db.datomic/conn

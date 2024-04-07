@@ -48,6 +48,13 @@
     (when-anomaly-throw result)
     result))
 
+;; helper function to filter user attrs map
+(defn get-user-attr-value
+  [attrs-map attr-name]
+  (when-let [rec (first (filter (fn [r]
+                                  (= (r :Name) attr-name)) (attrs-map :UserAttributes)))]
+    (rec :Value)))
+
 (defn create-cognito-account
   [{:keys [cognito-client client-id client-secret]} {:keys [email password]}]
   (let [result (aws/invoke cognito-client

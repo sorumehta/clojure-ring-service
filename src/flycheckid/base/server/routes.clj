@@ -40,13 +40,15 @@
 (defn private-routes
   [opts]
   ["/private" {:middleware [(auth/wrap-token-authentication opts) (db/wrap-database opts)]}
-   ["/get-user-info" {:get {:handler (partial account/get-user opts)}}]
-   ["/account/new"
+   ["/account/setup"
     {:post {:summary "creates a user with email in db"
             :parameters {:body [:map
                                 [:name string?]]}
-               ;; :responses {200 {:body account-spec/Account}}
+            :responses {200 [:map [:account-id string?]]}
             :handler (partial account/create-account opts)}}]
+   ["/account/list"
+    {:get {:summary "gets list of all accounts"
+           :handler (partial account/list-accounts opts)}}]
    ["/account/refresh-token"
     {:post {:summary "refreshes token a user in aws cognito user pool"
             :parameters {:body [:map

@@ -1,21 +1,33 @@
 (ns flycheckid.component.account.core
   (:require [flycheckid.component.auth.core :as auth]
             [flycheckid.component.log.interface :as log]
-            [clojure.pprint :as pprint]))
+            [clojure.pprint :as pprint]
+            [flycheckid.component.database.core :as datomic]
+            [flycheckid.shared.utils :as utils]))
 
 
+(defn list-accounts
+  [_opts
+   {db :db}]
+  (let [all-accounts-q '[:find ?account-id ?email ?display-name
+                         :where [?e :account/account-id ?account-id]
+                         [?e :account/display-name ?display-name]
+                         [?e :account/email ?email]]
+        query-result (datomic/query all-accounts-q db)]
+    {:status 200 :body (utils/bind-list-to-map query-result [:account-id :email :display-name])}))
 
 (defn create-account
-  [{:keys [cognito-idp]}
-   {{{name :name} :body} :parameters db :db headers :headers}]
-  (let [account-details (auth/get-user-attrs cognito-idp headers)])
-  {:status 200 :body nil})
+  [{:keys [cognito-idp conn]}
+   {{{name :name} :body} :parameters headers :headers}]
+  (let [user-attrs (auth/get-user-attrs cognito-idp headers)]
+    (if-let [user-email (auth/get-user-attr-value user-attrs "email")]
+      (do (let [result (datomic/transact-data conn [{:account/account-id (user-attrs :Username)
+                                                     :account/display-name name
+                                                     :account/email user-email}])]
+            (log/info result))
+          {:status 200 :body {:account-id (:Username user-attrs)}})
+      {:status 500 :body {:message "Error while creating user"}})))
 
-(defn get-user
-  [{:keys [cognito-idp]}
-   {:keys [headers]}]
-  (let [cognito-account (auth/get-user-attrs cognito-idp headers)]
-    {:status 200 :body cognito-account}))
 
 
 (defn sign-up
